@@ -1,4 +1,4 @@
-import sys, select
+import os, sys, select
 from math import degrees
 import time
 import code
@@ -106,9 +106,6 @@ def update_object(obj):
     renderer.Render()
     render_window.Render()
 
-    # Let the user know that we are ready for more input
-    print(">>> ", end="", flush=True)
-
 
 class replTimerCallback():
     """
@@ -128,42 +125,68 @@ class replTimerCallback():
             line = sys.stdin.readline()
 
             # If the line is a comment, there is no reason to execute it
-            if line[0] == '#':
+            if line.strip().startswith('#'):
                 return
 
-            # Check if the line is incomplete (open parens do not match close perens)
-            for i in line:
-                if i == '(':
-                    self.open_count = self.open_count + 1
-                if i == ')':
-                    self.close_count = self.close_count + 1
-            if self.open_count != self.close_count:
+            # If the line starts with class or def, expect some indented lines
+            if line.strip().startswith("def") or line.strip().startswith("class"):
                 self.command_incomplete = True
                 self.buffer += line
                 return
 
-            # If we had an incomplete command before but it is complete now, finish it out
-            if self.command_incomplete and self.open_count == self.close_count:
+             # See if a function is being closed out
+            if line.strip().startswith("return"):
                 self.buffer += line
                 line = self.buffer
 
                 # Reset back to the complete line condition
                 self.command_incomplete = False
                 self.buffer = ""
-                self.open_count = 0
-                self.close_count = 0
+
+            # Check for follow-on indented lines
+            if line.startswith(" ") and self.command_incomplete:
+                self.buffer += line
+                return
+
+            if "(" in line or ")" in line:
+                # Check if the line is incomplete (open parens do not match close perens)
+                for i in line:
+                    if i == '(':
+                        self.open_count = self.open_count + 1
+                    if i == ')':
+                        self.close_count = self.close_count + 1
+                if self.open_count != self.close_count:
+                    self.command_incomplete = True
+                    self.buffer += line
+                    return
+
+                # If we had an incomplete command before but it is complete now, finish it out
+                if self.command_incomplete and self.open_count == self.close_count:
+                    self.buffer += line
+                    line = self.buffer
+
+                    # Reset back to the complete line condition
+                    self.command_incomplete = False
+                    self.buffer = ""
+                    self.open_count = 0
+                    self.close_count = 0
 
             # Figure out if the line is code, or the user hitting Ctrl-D
             if line:
                 # Run the line given by the user
                 code_obj = code.compile_command(line)
                 exec(code_obj, globals())
+
+                # Make sure the user does not get a stray prompt when they hit enter to close something
+                if not line.endswith(os.linesep + os.linesep) and line != os.linesep:
+                    # Let the user know that we are ready for more input
+                    print(">>> ", end="", flush=True)
             else:
                 # The user hit Ctrl-D
                 exit(0)
 
             # If the line contains an assignment, inject a label set
-            if "=" in line:
+            if "=" in line and line.split(" ")[1] == "=":
                 obj_name = line.split("=")[0].strip()
                 code_obj = code.compile_command(f"{obj_name}.label='{obj_name}'")
 

@@ -8,9 +8,8 @@ A REPL interface for CadQuery that displays/updates the models as the lines of c
 
 # Known Limitations
 
-* The biggest issue currently is that Python code indentation is not handled correctly unless the code is wrapped in parentheses (so no method or class definitions), but this will be fixed soon.
-* Assemblies are not supported yet, but are the primary reason that this tool was created. As assemblies become more complex with more parts, re-executing an entire assembly causes long wait times and slows the developer's iteration cycle. This REPL is designed to only update the parts of the assembly that the user re-executes. This method has other drawbacks, an example being that constraint solving cannot be taken properly into account when the whole assembly is not being re-evaluated. The author has already does things like exploded views, which tends to break constraints anyway, so this is not as much of a concern. Assembly parts that are positioned parametrically in the code will work better with this REPL, but there may still be knock-on effects.
-* The implementation is *nix only at this point because of the use of the `select` package. The author is not opposed to Windows support, but it will probably need to be added by the community if this tool ends up seeing use by a broader audience than just the author.
+* Assemblies are not supported yet, but are the primary reason that this tool was created. As assemblies become more complex with more parts, re-executing an entire assembly causes long wait times and slows the developer's iteration cycle. This REPL is designed to only update the parts of the assembly that the user re-evaluates. This method has drawbacks, an example being that constraint solving cannot be taken properly into account when the whole assembly is not being re-evaluated. The author already does things like exploded views, which tends to break constraints anyway, so this is not as much of a concern. Assembly parts that are positioned parametrically in the code will work better with this REPL, but there may still be knock-on effects.
+* The implementation is *nix only at this point, mainly because of the use of the `select` package. The author is not opposed to Windows support, but it will probably need to be added by the community if this tool ends up seeing use by a broader audience than just the author.
 
 # Installation
 
@@ -34,7 +33,7 @@ The author uses this tool with Visual Studio Code, but similar setups should be 
 2. Open a terminal with `Terminal->New Terminal`
 3. Switch to the terminal in VSCode and activate the Python virtual environment that cq-repl was installed in.
 4. Start cq-repl in the terminal by running the command `cq-repl`.
-5. Open `examples/box.py` and work from the top to the bottom, executing each line in turn by clicking on the line and pressing `Shift-Alt-Enter` (the default key combo for SendToTerminal+). Alternatively, you can highlight sections of code to be executed at once with `Shift-Alt-Enter`.
+5. Open `examples/box.py` and work from the top to the bottom, executing each line in turn by clicking on the line and pressing `Shift-Alt-Enter` (the default key combo for SendToTerminal+). Alternatively, you can highlight sections of code (function and class definitions) to be executed at once with `Shift-Alt-Enter`.
 
 As you execute each line, there are a few things to note.
 
