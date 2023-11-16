@@ -6,7 +6,13 @@ import code
 from vtkmodules.vtkInteractionWidgets import vtkOrientationMarkerWidget
 from vtkmodules.vtkRenderingAnnotation import vtkAxesActor
 from vtkmodules.vtkInteractionStyle import vtkInteractorStyleTrackballCamera
-from vtkmodules.vtkRenderingCore import vtkRenderer, vtkRenderWindow, vtkPolyDataMapper as vtkMapper, vtkActor, vtkRenderWindowInteractor
+from vtkmodules.vtkRenderingCore import (
+    vtkRenderer,
+    vtkRenderWindow,
+    vtkPolyDataMapper as vtkMapper,
+    vtkActor,
+    vtkRenderWindowInteractor,
+)
 from vtkmodules.vtkFiltersExtraction import vtkExtractCellsByType
 from vtkmodules.vtkCommonDataModel import VTK_TRIANGLE, VTK_LINE, VTK_VERTEX
 
@@ -42,12 +48,21 @@ def show_object(model):
 
         # Add face and edge related rendering objects to the renderer if they do not already exist
         if name not in display_objects:
-            display_objects[name] = {"face_mapper": vtkMapper(), "face_actor": vtkActor(), "edge_mapper": vtkMapper(), "edge_actor": vtkActor()}
+            display_objects[name] = {
+                "face_mapper": vtkMapper(),
+                "face_actor": vtkActor(),
+                "edge_mapper": vtkMapper(),
+                "edge_actor": vtkActor(),
+            }
 
             # Associate the actors and mappers
-            display_objects[name]["face_actor"].SetMapper(display_objects[name]["face_mapper"])
+            display_objects[name]["face_actor"].SetMapper(
+                display_objects[name]["face_mapper"]
+            )
             renderer.AddActor(display_objects[name]["face_actor"])
-            display_objects[name]["edge_actor"].SetMapper(display_objects[name]["edge_mapper"])
+            display_objects[name]["edge_actor"].SetMapper(
+                display_objects[name]["edge_mapper"]
+            )
             renderer.AddActor(display_objects[name]["edge_actor"])
 
         update_object(object)
@@ -107,10 +122,11 @@ def update_object(obj):
     render_window.Render()
 
 
-class replTimerCallback():
+class replTimerCallback:
     """
     Holds the information necessary to present the REPL prompt to the user properly.
     """
+
     def __init__(self):
         self.buffer = ""
         self.command_incomplete = False
@@ -125,7 +141,7 @@ class replTimerCallback():
             line = sys.stdin.readline()
 
             # If the line is a comment, there is no reason to execute it
-            if line.strip().startswith('#'):
+            if line.strip().startswith("#"):
                 return
 
             # If the line starts with class or def, expect some indented lines
@@ -134,7 +150,7 @@ class replTimerCallback():
                 self.buffer += line
                 return
 
-             # See if a function is being closed out
+            # See if a function is being closed out
             if line.strip().startswith("return"):
                 self.buffer += line
                 line = self.buffer
@@ -151,9 +167,9 @@ class replTimerCallback():
             if "(" in line or ")" in line:
                 # Check if the line is incomplete (open parens do not match close perens)
                 for i in line:
-                    if i == '(':
+                    if i == "(":
                         self.open_count = self.open_count + 1
-                    if i == ')':
+                    if i == ")":
                         self.close_count = self.close_count + 1
                 if self.open_count != self.close_count:
                     self.command_incomplete = True
@@ -264,7 +280,7 @@ def init_vtkwindow(render_window, renderer, repl_cb):
     render_window.SetPosition(-10, 0)
 
     # Timer to handle command line REPL input
-    interactor.AddObserver('TimerEvent', repl_cb.execute)
+    interactor.AddObserver("TimerEvent", repl_cb.execute)
     timerId = interactor.CreateRepeatingTimer(10)
 
     # show and return

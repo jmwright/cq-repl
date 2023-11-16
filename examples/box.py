@@ -23,6 +23,7 @@ def plate():
 
     return res
 
+
 # plate function wrapped in a class
 class Plate:
     def plate():

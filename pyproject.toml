@@ -19,6 +19,13 @@ dependencies = [
 [project.scripts]
 cq-repl = "cq_repl.main:main"
 
+[project.optional-dependencies]
+dev = [
+  "pytest",
+  "black==19.10b0",
+  "click==8.0.4"
+]
+
 [project.urls]
 "Homepage" = "https://github.com/CadQuery/cq-repl"
 "Bug Tracker" = "https://github.com/CadQuery/cq-repl/issues"
