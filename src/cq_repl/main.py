@@ -62,7 +62,12 @@ def show_object(model):
     if type(model).__name__ == "Workplane":
         # Wrap the model in a dict to carry extra info with it
         objects = {}
-        objects[model.label] = {"model": model, "color": (0.93, 0.46, 0.0, 1.0), "translation": (0, 0, 0), "rotation": (0, 0, 0)}
+        objects[model.label] = {
+            "model": model,
+            "color": (0.93, 0.46, 0.0, 1.0),
+            "translation": (0, 0, 0),
+            "rotation": (0, 0, 0),
+        }
     elif type(model).__name__ == "Assembly":
         objects = process_assembly(model)
 
@@ -87,7 +92,9 @@ def show_object(model):
             )
             renderer.AddActor(display_objects[name]["edge_actor"])
 
-        update_object(object["model"], object["color"], object["translation"], object["rotation"])
+        update_object(
+            object["model"], object["color"], object["translation"], object["rotation"]
+        )
 
 
 def update_object(obj, color, translation, rotation):
