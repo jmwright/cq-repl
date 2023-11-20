@@ -26,6 +26,30 @@ renderer = vtkRenderer()
 display_objects = {}
 
 
+def process_assembly(assy):
+    """
+    Breaks an assembly down so that it can be displayed properly by the
+    REPL mechanism.
+    """
+
+    objects = {}
+
+    # Collect all of the shapes, along with their color, translation and rotation data
+    for shape, name, loc, col in assy:
+        color = col.toTuple() if col else (0.5, 0.5, 0.5, 1.0)
+        trans, rot = loc.toTuple()
+
+        # Lower level shapes need to be named and wrapped in a cq.Workplane object
+        model = cq.Workplane(shape)
+        model.label = name
+
+        object = {"model": model, "color": color, "translation": trans, "rotation": rot}
+
+        objects[name] = object
+
+    return objects
+
+
 def show_object(model):
     """
     Called by the CadQuery script to display an Assembly/Workplane object.
@@ -36,16 +60,14 @@ def show_object(model):
         return
 
     if type(model).__name__ == "Workplane":
-        # List of objects to update, only 1 in this case
-        objects = [model]
-    elif type(model).__name__ == "Assewmbly":
-        print("Assembly")
+        # Wrap the model in a dict to carry extra info with it
+        objects = {}
+        objects[model.label] = {"model": model, "color": (0.93, 0.46, 0.0, 1.0), "translation": (0, 0, 0), "rotation": (0, 0, 0)}
+    elif type(model).__name__ == "Assembly":
+        objects = process_assembly(model)
 
     # Step through all the objects and update them
-    for object in objects:
-        # Extract the name from the object
-        name = object.label
-
+    for name, object in objects.items():
         # Add face and edge related rendering objects to the renderer if they do not already exist
         if name not in display_objects:
             display_objects[name] = {
@@ -65,18 +87,13 @@ def show_object(model):
             )
             renderer.AddActor(display_objects[name]["edge_actor"])
 
-        update_object(object)
+        update_object(object["model"], object["color"], object["translation"], object["rotation"])
 
 
-def update_object(obj):
+def update_object(obj, color, translation, rotation):
     """
     Converts a Workplane object and adds its data to the VTK renderer.
     """
-
-    # Default color for now
-    color = (0.93, 0.46, 0.0, 1.0)
-    translation = (0, 0, 0)
-    rotation = (0, 0, 0)
 
     data = obj.val().toVtkPolyData(1e-3, 0.1)
 
