@@ -41,11 +41,16 @@ def process_assembly(assy):
 
         # Lower level shapes need to be named and wrapped in a cq.Workplane object
         model = cq.Workplane(shape)
-        model.label = name
+
+        # Assembly names can come with extra ids attached
+        if "/" in name:
+            model.label = name.split("/")[1]
+        else:
+            model.label = name
 
         object = {"model": model, "color": color, "translation": trans, "rotation": rot}
 
-        objects[name] = object
+        objects[model.label] = object
 
     return objects
 
@@ -60,13 +65,24 @@ def show_object(model):
         return
 
     if type(model).__name__ == "Workplane":
+        # Default attributes
+        color = (0.93, 0.46, 0.0, 1.0)
+        translation = (0, 0, 0)
+        rotation = (0, 0, 0)
+
+        # If the model exists already, only update what we need to
+        if model.label in display_objects.keys():
+            color = display_objects[model.label]["color"]
+            translation = display_objects[model.label]["translation"]
+            rotation = display_objects[model.label]["rotation"]
+
         # Wrap the model in a dict to carry extra info with it
         objects = {}
         objects[model.label] = {
             "model": model,
-            "color": (0.93, 0.46, 0.0, 1.0),
-            "translation": (0, 0, 0),
-            "rotation": (0, 0, 0),
+            "color": color,
+            "translation": translation,
+            "rotation": rotation,
         }
     elif type(model).__name__ == "Assembly":
         objects = process_assembly(model)
@@ -140,6 +156,11 @@ def update_object(obj, color, translation, rotation):
     display_objects[name]["edge_actor"].SetOrientation(*map(degrees, rotation))
     display_objects[name]["edge_actor"].GetProperty().SetColor(0, 0, 0)
     display_objects[name]["edge_actor"].GetProperty().SetLineWidth(2)
+
+    # Save the high-level attributes that was used to create the mappers and actors
+    display_objects[name]["color"] = color
+    display_objects[name]["translation"] = translation
+    display_objects[name]["rotation"] = rotation
 
     # Force an update
     renderer.Render()
@@ -228,6 +249,7 @@ class replTimerCallback:
             # If the line contains an assignment, inject a label set
             if "=" in line and line.split(" ")[1] == "=":
                 obj_name = line.split("=")[0].strip()
+
                 code_obj = code.compile_command(f"{obj_name}.label='{obj_name}'")
 
                 # Use a try in case we are trying to call show_object with something other than a CadQuery object
@@ -242,8 +264,10 @@ class replTimerCallback:
                 # Use a try in case we are trying to call show_object with something other than a CadQuery object
                 try:
                     exec(code_obj, globals())
-                except:
-                    pass
+                except Exception as err:
+                    import traceback
+                    out_tb = traceback.format_exc()
+                    print(out_tb)
             elif "show_object" not in line and "=" not in line:
                 code_obj = code.compile_command(f"show_object(None)")
                 exec(code_obj, globals())
