@@ -21,6 +21,7 @@ import cadquery as cq
 # VTK window and renderer
 render_window = vtkRenderWindow()
 renderer = vtkRenderer()
+camera = renderer.GetActiveCamera()
 
 # Keeps track of all the objects that we are rendering so they can be updated
 display_objects = {}
@@ -90,7 +91,7 @@ def show_object(model):
     # Step through all the objects and update them
     for name, object in objects.items():
         # Add face and edge related rendering objects to the renderer if they do not already exist
-        if name not in display_objects:
+        if name not in display_objects.keys():
             display_objects[name] = {
                 "face_mapper": vtkMapper(),
                 "face_actor": vtkActor(),
@@ -189,6 +190,32 @@ class replTimerCallback:
             if line.strip().startswith("#"):
                 return
 
+            # Handle license and help requests
+            if line.strip() == "license":
+                # Output the license info
+                print_license()
+
+                # Let the user know that we are ready for more input
+                print(">>> ", end="", flush=True)
+
+                return
+            elif line.strip() == "help":
+                # Output information on how to use the app
+                print_help()
+
+                # Let the user know that we are ready for more input
+                print(">>> ", end="", flush=True)
+
+                return
+            elif line.strip() == "clear":
+                # Clear the 3D viewer
+                clear_viewer()
+
+                # Let the user know that we are ready for more input
+                print(">>> ", end="", flush=True)
+
+                return
+
             # If the line starts with class or def, expect some indented lines
             if line.strip().startswith("def") or line.strip().startswith("class"):
                 self.command_incomplete = True
@@ -252,26 +279,110 @@ class replTimerCallback:
 
                 code_obj = code.compile_command(f"{obj_name}.label='{obj_name}'")
 
-                # Use a try in case we are trying to call show_object with something other than a CadQuery object
-                try:
-                    exec(code_obj, globals())
-                except:
-                    pass
-
-                # Inject an automatic show_object call
-                code_obj = code.compile_command(f"show_object({obj_name})")
+                error_occurred = False
 
                 # Use a try in case we are trying to call show_object with something other than a CadQuery object
                 try:
                     exec(code_obj, globals())
                 except Exception as err:
-                    import traceback
-                    out_tb = traceback.format_exc()
-                    print(out_tb)
+                    if type(err).__name__ != "AttributeError":
+                        import traceback
+                        out_tb = traceback.format_exc()
+                        print(out_tb)
+
+                    # Used to keep from executing show_object if it does not apply
+                    error_occurred = True
+
+                if not error_occurred:
+                    # Inject an automatic show_object call
+                    code_obj = code.compile_command(f"show_object({obj_name})")
+
+                    # Use a try in case we are trying to call show_object with something other than a CadQuery object
+                    try:
+                        exec(code_obj, globals())
+                    except Exception as err:
+                        import traceback
+                        out_tb = traceback.format_exc()
+                        print(out_tb)
+
+                        # Let the user know that we are ready for more input
+                        print(">>> ", end="", flush=True)
             elif "show_object" not in line and "=" not in line:
                 code_obj = code.compile_command(f"show_object(None)")
                 exec(code_obj, globals())
 
+
+    def keypress(self, obj, event):
+        """
+        Handles the event of the user pressing a key on the 3D view.
+        """
+        key = obj.GetKeySym()
+
+        if key == "KP_Enter":
+            # Reset the zoom
+            renderer.ResetCamera()
+        elif key == "KP_Prior":
+            # Reset the position
+            camera.SetPosition(45, 45, 45)
+            camera.SetViewUp(0, 0, 1)
+            camera.SetFocalPoint(0.0, 0.0, 0.0)
+
+            # Reset the zoom
+            renderer.ResetCamera()
+        elif key == "KP_Home":
+            # Reset the position
+            camera.SetPosition(45, -45, 45)
+            camera.SetViewUp(0, 0, 1)
+            camera.SetFocalPoint(0.0, 0.0, 0.0)
+
+            # Reset the zoom
+            renderer.ResetCamera()
+        elif key == "KP_Up":
+            # Reset the position
+            camera.SetPosition(0, 0, 45)
+            camera.SetViewUp(0, 1, 0)
+            camera.SetFocalPoint(0.0, 0.0, 0.0)
+
+            # Reset the zoom
+            renderer.ResetCamera()
+        elif key == "KP_Down":
+            # Reset the position
+            camera.SetPosition(0, 0, -45)
+            camera.SetViewUp(0, 1, 0)
+            camera.SetFocalPoint(0.0, 0.0, 0.0)
+
+            # Reset the zoom
+            renderer.ResetCamera()
+        elif key == "KP_Right":
+            # Reset the position
+            camera.SetViewUp(0, 0, 1)
+            camera.SetPosition(45, 0, 0)
+            camera.SetFocalPoint(0.0, 0.0, 0.0)
+
+            # Reset the zoom
+            renderer.ResetCamera()
+        elif key == "KP_Left":
+            # Reset the position
+            camera.SetViewUp(0, 0, 1)
+            camera.SetPosition(-45, 0, 0)
+            camera.SetFocalPoint(0.0, 0.0, 0.0)
+
+            # Reset the zoom
+            renderer.ResetCamera()
+        elif key == "KP_Begin":
+            # Reset the position
+            camera.SetViewUp(0, 0, 1)
+            camera.SetPosition(0, -45, 0)
+            camera.SetFocalPoint(0.0, 0.0, 0.0)
+
+            # Reset the zoom
+            renderer.ResetCamera()
+        # else:
+        #     print(key)
+
+        # Make sure the window updates
+        renderer.Render()
+        render_window.Render()
 
 def init_vtkwindow(render_window, renderer, repl_cb):
     """
@@ -316,9 +427,10 @@ def init_vtkwindow(render_window, renderer, repl_cb):
     renderer.GradientBackgroundOn()
 
     # Camera setup
-    camera = renderer.GetActiveCamera()
+    # camera = renderer.GetActiveCamera()
     camera.Roll(-35)
     camera.Elevation(-45)
+    camera.SetViewUp(0, 0, 1)
     renderer.ResetCamera()
 
     # Set window dimensions
@@ -331,6 +443,9 @@ def init_vtkwindow(render_window, renderer, repl_cb):
     interactor.AddObserver("TimerEvent", repl_cb.execute)
     timerId = interactor.CreateRepeatingTimer(10)
 
+    # Handle keypress events
+    interactor.AddObserver("KeyPressEvent", repl_cb.keypress)
+
     # show and return
     render_window.Render()
     interactor.Start()
@@ -339,7 +454,75 @@ def init_vtkwindow(render_window, renderer, repl_cb):
     render_window.GetInteractor().TerminateApp()
 
 
+def clear_viewer():
+    """
+    Removes previous objects from the 3D viewer.
+    """
+
+    # Remove all objects that are being tracked right now
+    display_objects.clear()
+
+    # Remove all displayed objects from the 3D viewer, but not the Python interpreter
+    renderer.RemoveAllViewProps()
+
+    # Force an update
+    renderer.Render()
+    render_window.Render()
+
+
+def print_license():
+    """
+    Output license information for the app.
+    """
+
+    print("GNU Lesser General Public License v2.1")
+    print("https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html")
+
+
+def print_help():
+    """
+    Output information on how to use the app.
+    """
+
+    # Output the keybindings for the 3D viewer
+    print("Key bindings:")
+    print("  q => quit")
+    print("  keypad enter => fit view")
+    print("  keypad up/8 => top view")
+    print("  keypad down/2 => bottom view")
+    print("  keypad left/4 => left view")
+    print("  keypad right/6 => right view")
+    print("  keypad 5 => front view")
+    print("  keypad 7 => top-left view")
+    print("  keypad 9 => top-right view")
+
+
 def main():
+    # So that the version number is kept only in pyproject.toml
+    import pkg_resources
+    cur_version = pkg_resources.get_distribution('cq-repl').version
+
+    import argparse
+
+    # So that the version number is kept only in pyproject.toml
+    import pkg_resources
+    cur_version = pkg_resources.get_distribution('cq-repl').version
+
+    # Set up the command line option parser
+    parser = argparse.ArgumentParser(
+        description="Visual REPL for developing CadQuery models, with partial updates of assemblies."
+    )
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"%(prog)s {cur_version}",
+        help="Outputs the version number of this application and then exits.",
+    )
+
+    # Print the welcome message
+    print(f"cq-repl {cur_version}")
+    print('Type "license" or "help" for more information.')
+
     # Let the user know we are ready for the next command
     print(">>> ", end="", flush=True)
 
