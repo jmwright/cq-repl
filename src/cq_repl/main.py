@@ -287,6 +287,7 @@ class replTimerCallback:
                 except Exception as err:
                     if type(err).__name__ != "AttributeError":
                         import traceback
+
                         out_tb = traceback.format_exc()
                         print(out_tb)
 
@@ -302,6 +303,7 @@ class replTimerCallback:
                         exec(code_obj, globals())
                     except Exception as err:
                         import traceback
+
                         out_tb = traceback.format_exc()
                         print(out_tb)
 
@@ -310,7 +312,6 @@ class replTimerCallback:
             elif "show_object" not in line and "=" not in line:
                 code_obj = code.compile_command(f"show_object(None)")
                 exec(code_obj, globals())
-
 
     def keypress(self, obj, event):
         """
@@ -383,6 +384,7 @@ class replTimerCallback:
         # Make sure the window updates
         renderer.Render()
         render_window.Render()
+
 
 def init_vtkwindow(render_window, renderer, repl_cb):
     """
@@ -500,13 +502,15 @@ def print_help():
 def main():
     # So that the version number is kept only in pyproject.toml
     import pkg_resources
-    cur_version = pkg_resources.get_distribution('cq-repl').version
+
+    cur_version = pkg_resources.get_distribution("cq-repl").version
 
     import argparse
 
     # So that the version number is kept only in pyproject.toml
     import pkg_resources
-    cur_version = pkg_resources.get_distribution('cq-repl').version
+
+    cur_version = pkg_resources.get_distribution("cq-repl").version
 
     # Set up the command line option parser
     parser = argparse.ArgumentParser(
