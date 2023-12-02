@@ -523,6 +523,9 @@ def main():
         help="Outputs the version number of this application and then exits.",
     )
 
+    # Make sure that any user-created modules are found
+    sys.path.append(os.getcwd())
+
     # Print the welcome message
     print(f"cq-repl {cur_version}")
     print('Type "license" or "help" for more information.')
