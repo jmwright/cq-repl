@@ -51,7 +51,12 @@ def process_assembly(assy):
             else:
                 model.label = name
 
-            object = {"model": model, "color": color, "translation": trans, "rotation": rot}
+            object = {
+                "model": model,
+                "color": color,
+                "translation": trans,
+                "rotation": rot,
+            }
 
             objects[model.label] = object
 
