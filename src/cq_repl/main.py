@@ -36,22 +36,24 @@ def process_assembly(assy):
     objects = {}
 
     # Collect all of the shapes, along with their color, translation and rotation data
-    for shape, name, loc, col in assy:
-        color = col.toTuple() if col else (0.5, 0.5, 0.5, 1.0)
-        trans, rot = loc.toTuple()
+    for subassy in assy.traverse():
+        for shape, name, loc, col in subassy[1]:
+            print(shape)
+            color = col.toTuple() if col else (0.5, 0.5, 0.5, 1.0)
+            trans, rot = loc.toTuple()
 
-        # Lower level shapes need to be named and wrapped in a cq.Workplane object
-        model = cq.Workplane(shape)
+            # Lower level shapes need to be named and wrapped in a cq.Workplane object
+            model = cq.Workplane(shape)
 
-        # Assembly names can come with extra ids attached
-        if "/" in name:
-            model.label = name.split("/")[1]
-        else:
-            model.label = name
+            # Assembly names can come with extra ids attached
+            if "/" in name:
+                model.label = name.split("/")[1]
+            else:
+                model.label = name
 
-        object = {"model": model, "color": color, "translation": trans, "rotation": rot}
+            object = {"model": model, "color": color, "translation": trans, "rotation": rot}
 
-        objects[model.label] = object
+            objects[model.label] = object
 
     return objects
 
