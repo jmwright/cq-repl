@@ -15,3 +15,7 @@ assy.add(
 )
 
 show_object(assy)
+
+# Uncomment the lines below and send them to the repl to alter assembly component location/rotation and color
+# assy.objects["box2"].loc = cq.Location((0, 0, 10), (1, 0, 1), 45)
+# assy.objects["box2"].color = cq.Color(0, 1.0, 0, 1.0)

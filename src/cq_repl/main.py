@@ -38,7 +38,6 @@ def process_assembly(assy):
     # Collect all of the shapes, along with their color, translation and rotation data
     for subassy in assy.traverse():
         for shape, name, loc, col in subassy[1]:
-            print(shape)
             color = col.toTuple() if col else (0.5, 0.5, 0.5, 1.0)
             trans, rot = loc.toTuple()
 
@@ -280,8 +279,20 @@ class replTimerCallback:
                 # The user hit Ctrl-D
                 exit(0)
 
+            # If an assembly object location is being updated, handle that specific case
+            if ("].loc" in line or "].color" in line) and "=" in line:
+                # Extract the assembly name from the line
+                assy_name = line.split(".")[0]
+
+                # Execute the line to update the assembly
+                code_obj = code.compile_command(line)
+                exec(code_obj, globals())
+
+                # Force an update of the assembly in the view
+                code_obj = code.compile_command(f"show_object({assy_name})")
+                exec(code_obj, globals())
             # If the line contains an assignment, inject a label set
-            if "=" in line and line.split(" ")[1] == "=":
+            elif "=" in line and line.split(" ")[1] == "=":
                 obj_name = line.split("=")[0].strip()
 
                 code_obj = code.compile_command(f"{obj_name}.label='{obj_name}'")
