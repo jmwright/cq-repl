@@ -27,6 +27,34 @@ camera = renderer.GetActiveCamera()
 display_objects = {}
 
 
+def process_workplane(wp):
+    """
+    Breaks a Workplane down so that it can be displayed properly by the
+    REPL mechanism.
+    """
+    # Default attributes
+    color = (0.93, 0.46, 0.0, 1.0)
+    translation = (0, 0, 0)
+    rotation = (0, 0, 0)
+
+    # If the model exists already, only update what we need to
+    if wp.label in display_objects.keys():
+        color = display_objects[wp.label]["color"]
+        translation = display_objects[wp.label]["translation"]
+        rotation = display_objects[wp.label]["rotation"]
+
+    # Wrap the model in a dict to carry extra info with it
+    objects = {}
+    objects[wp.label] = {
+        "model": wp,
+        "color": color,
+        "translation": translation,
+        "rotation": rotation,
+    }
+
+    return objects
+
+
 def process_assembly(assy):
     """
     Breaks an assembly down so that it can be displayed properly by the
@@ -72,27 +100,12 @@ def show_object(model):
         return
 
     if type(model).__name__ == "Workplane":
-        # Default attributes
-        color = (0.93, 0.46, 0.0, 1.0)
-        translation = (0, 0, 0)
-        rotation = (0, 0, 0)
-
-        # If the model exists already, only update what we need to
-        if model.label in display_objects.keys():
-            color = display_objects[model.label]["color"]
-            translation = display_objects[model.label]["translation"]
-            rotation = display_objects[model.label]["rotation"]
-
-        # Wrap the model in a dict to carry extra info with it
-        objects = {}
-        objects[model.label] = {
-            "model": model,
-            "color": color,
-            "translation": translation,
-            "rotation": rotation,
-        }
+        objects = process_workplane(model)
     elif type(model).__name__ == "Assembly":
         objects = process_assembly(model)
+    elif type(model).__name__ == "CadObject":
+        model.cq().label = model.label
+        objects = process_workplane(model.cq())
 
     # Step through all the objects and update them
     for name, object in objects.items():
@@ -161,8 +174,8 @@ def update_object(obj, color, translation, rotation):
     display_objects[name]["edge_mapper"].SetInputDataObject(data_edges)
     display_objects[name]["edge_actor"].SetPosition(*translation)
     display_objects[name]["edge_actor"].SetOrientation(*map(degrees, rotation))
-    display_objects[name]["edge_actor"].GetProperty().SetColor(0, 0, 0)
-    display_objects[name]["edge_actor"].GetProperty().SetLineWidth(2)
+    display_objects[name]["edge_actor"].GetProperty().SetColor(0.7, 0.7, 0.7)
+    display_objects[name]["edge_actor"].GetProperty().SetLineWidth(1)
 
     # Save the high-level attributes that was used to create the mappers and actors
     display_objects[name]["color"] = color
@@ -542,7 +555,10 @@ def main():
     )
 
     # Make sure that any user-created modules are found
-    sys.path.append(os.getcwd())
+    this_path = os.getcwd()
+    # parent_path = os.path.abspath(os.path.join(this_path, os.pardir))
+    sys.path.append(this_path)
+    # sys.path.append(parent_path)
 
     # Print the welcome message
     print(f"cq-repl {cur_version}")
