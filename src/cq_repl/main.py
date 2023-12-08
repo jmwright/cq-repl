@@ -21,7 +21,7 @@ import cadquery as cq
 # VTK window and renderer
 render_window = vtkRenderWindow()
 renderer = vtkRenderer()
-camera = renderer.GetActiveCamera()
+repl_camera = renderer.GetActiveCamera()
 
 # Keeps track of all the objects that we are rendering so they can be updated
 display_objects = {}
@@ -197,6 +197,7 @@ class replTimerCallback:
         self.command_incomplete = False
         self.open_count = 0
         self.close_count = 0
+        self.parallel_on = False  # Keeps track of the camera perspective mode
 
     def execute(self, obj, event):
         """
@@ -355,60 +356,68 @@ class replTimerCallback:
             renderer.ResetCamera()
         elif key == "KP_Prior":
             # Reset the position
-            camera.SetPosition(45, 45, 45)
-            camera.SetViewUp(0, 0, 1)
-            camera.SetFocalPoint(0.0, 0.0, 0.0)
+            repl_camera.SetPosition(45, 45, 45)
+            repl_camera.SetViewUp(0, 0, 1)
+            repl_camera.SetFocalPoint(0.0, 0.0, 0.0)
 
             # Reset the zoom
             renderer.ResetCamera()
         elif key == "KP_Home":
             # Reset the position
-            camera.SetPosition(45, -45, 45)
-            camera.SetViewUp(0, 0, 1)
-            camera.SetFocalPoint(0.0, 0.0, 0.0)
+            repl_camera.SetPosition(45, -45, 45)
+            repl_camera.SetViewUp(0, 0, 1)
+            repl_camera.SetFocalPoint(0.0, 0.0, 0.0)
 
             # Reset the zoom
             renderer.ResetCamera()
         elif key == "KP_Up":
             # Reset the position
-            camera.SetPosition(0, 0, 45)
-            camera.SetViewUp(0, 1, 0)
-            camera.SetFocalPoint(0.0, 0.0, 0.0)
+            repl_camera.SetPosition(0, 0, 45)
+            repl_camera.SetViewUp(0, 1, 0)
+            repl_camera.SetFocalPoint(0.0, 0.0, 0.0)
 
             # Reset the zoom
             renderer.ResetCamera()
         elif key == "KP_Down":
             # Reset the position
-            camera.SetPosition(0, 0, -45)
-            camera.SetViewUp(0, 1, 0)
-            camera.SetFocalPoint(0.0, 0.0, 0.0)
+            repl_camera.SetPosition(0, 0, -45)
+            repl_camera.SetViewUp(0, 1, 0)
+            repl_camera.SetFocalPoint(0.0, 0.0, 0.0)
 
             # Reset the zoom
             renderer.ResetCamera()
         elif key == "KP_Right":
             # Reset the position
-            camera.SetViewUp(0, 0, 1)
-            camera.SetPosition(45, 0, 0)
-            camera.SetFocalPoint(0.0, 0.0, 0.0)
+            repl_camera.SetViewUp(0, 0, 1)
+            repl_camera.SetPosition(45, 0, 0)
+            repl_camera.SetFocalPoint(0.0, 0.0, 0.0)
 
             # Reset the zoom
             renderer.ResetCamera()
         elif key == "KP_Left":
             # Reset the position
-            camera.SetViewUp(0, 0, 1)
-            camera.SetPosition(-45, 0, 0)
-            camera.SetFocalPoint(0.0, 0.0, 0.0)
+            repl_camera.SetViewUp(0, 0, 1)
+            repl_camera.SetPosition(-45, 0, 0)
+            repl_camera.SetFocalPoint(0.0, 0.0, 0.0)
 
             # Reset the zoom
             renderer.ResetCamera()
         elif key == "KP_Begin":
             # Reset the position
-            camera.SetViewUp(0, 0, 1)
-            camera.SetPosition(0, -45, 0)
-            camera.SetFocalPoint(0.0, 0.0, 0.0)
+            repl_camera.SetViewUp(0, 0, 1)
+            repl_camera.SetPosition(0, -45, 0)
+            repl_camera.SetFocalPoint(0.0, 0.0, 0.0)
 
             # Reset the zoom
             renderer.ResetCamera()
+        elif key == "p":
+            # Allows for toggling the state
+            if self.parallel_on:
+                repl_camera.ParallelProjectionOff()
+                self.parallel_on = False
+            else:
+                repl_camera.ParallelProjectionOn()
+                self.parallel_on = True
         # else:
         #     print(key)
 
@@ -461,9 +470,9 @@ def init_vtkwindow(render_window, renderer, repl_cb):
 
     # Camera setup
     # camera = renderer.GetActiveCamera()
-    camera.Roll(-35)
-    camera.Elevation(-45)
-    camera.SetViewUp(0, 0, 1)
+    repl_camera.Roll(-35)
+    repl_camera.Elevation(-45)
+    repl_camera.SetViewUp(0, 0, 1)
     renderer.ResetCamera()
 
     # Set window dimensions
@@ -520,6 +529,7 @@ def print_help():
     # Output the keybindings for the 3D viewer
     print("Key bindings:")
     print("  q => quit")
+    print("  p => toggle camera parallel perspective")
     print("  keypad enter => fit view")
     print("  keypad up/8 => top view")
     print("  keypad down/2 => bottom view")
@@ -556,8 +566,8 @@ def main():
 
     # Make sure that any user-created modules are found
     this_path = os.getcwd()
-    # parent_path = os.path.abspath(os.path.join(this_path, os.pardir))
     sys.path.append(this_path)
+    # parent_path = os.path.abspath(os.path.join(this_path, os.pardir))
     # sys.path.append(parent_path)
 
     # Print the welcome message
