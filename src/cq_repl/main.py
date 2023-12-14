@@ -526,6 +526,11 @@ def print_help():
     Output information on how to use the app.
     """
 
+    # Output the commands for the REPL
+    print("Commands:")
+    print("  help => Prints this help message and exits")
+    print("  clear => Clears the 3D view, but does not reset the Python interpreter")
+    print("  license => Outputs the license for this software and exits")
     # Output the keybindings for the 3D viewer
     print("Key bindings:")
     print("  q => quit")
