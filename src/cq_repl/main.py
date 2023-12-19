@@ -198,6 +198,7 @@ class replTimerCallback:
         self.open_count = 0
         self.close_count = 0
         self.parallel_on = False  # Keeps track of the camera perspective mode
+        self.is_front = True
 
     def execute(self, obj, event):
         """
@@ -361,7 +362,7 @@ class replTimerCallback:
             repl_camera.SetFocalPoint(0.0, 0.0, 0.0)
 
             # Reset the zoom
-            renderer.ResetCamera()
+            # renderer.ResetCamera()
         elif key == "KP_Home":
             # Reset the position
             repl_camera.SetPosition(45, -45, 45)
@@ -369,7 +370,7 @@ class replTimerCallback:
             repl_camera.SetFocalPoint(0.0, 0.0, 0.0)
 
             # Reset the zoom
-            renderer.ResetCamera()
+            # renderer.ResetCamera()
         elif key == "KP_Up":
             # Reset the position
             repl_camera.SetPosition(0, 0, 45)
@@ -377,7 +378,7 @@ class replTimerCallback:
             repl_camera.SetFocalPoint(0.0, 0.0, 0.0)
 
             # Reset the zoom
-            renderer.ResetCamera()
+            # renderer.ResetCamera()
         elif key == "KP_Down":
             # Reset the position
             repl_camera.SetPosition(0, 0, -45)
@@ -385,7 +386,7 @@ class replTimerCallback:
             repl_camera.SetFocalPoint(0.0, 0.0, 0.0)
 
             # Reset the zoom
-            renderer.ResetCamera()
+            # renderer.ResetCamera()
         elif key == "KP_Right":
             # Reset the position
             repl_camera.SetViewUp(0, 0, 1)
@@ -393,7 +394,7 @@ class replTimerCallback:
             repl_camera.SetFocalPoint(0.0, 0.0, 0.0)
 
             # Reset the zoom
-            renderer.ResetCamera()
+            # renderer.ResetCamera()
         elif key == "KP_Left":
             # Reset the position
             repl_camera.SetViewUp(0, 0, 1)
@@ -401,15 +402,24 @@ class replTimerCallback:
             repl_camera.SetFocalPoint(0.0, 0.0, 0.0)
 
             # Reset the zoom
-            renderer.ResetCamera()
+            # renderer.ResetCamera()
         elif key == "KP_Begin":
+            # Toggle the view
+            pos = -45
+            if self.is_front:
+                pos = -45
+                self.is_front = False
+            else:
+                self.is_front = True
+                pos = 45
+
             # Reset the position
             repl_camera.SetViewUp(0, 0, 1)
-            repl_camera.SetPosition(0, -45, 0)
+            repl_camera.SetPosition(0, pos, 0)
             repl_camera.SetFocalPoint(0.0, 0.0, 0.0)
 
             # Reset the zoom
-            renderer.ResetCamera()
+            # renderer.ResetCamera()
         elif key == "p":
             # Allows for toggling the state
             if self.parallel_on:
