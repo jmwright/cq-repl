@@ -257,12 +257,12 @@ class replTimerCallback:
                 self.buffer += line
                 return
 
-            if "(" in line or ")" in line:
+            if "(" in line or ")" in line or "[" in line or "]" in line:
                 # Check if the line is incomplete (open parens do not match close perens)
                 for i in line:
-                    if i == "(":
+                    if i == "(" or i == "[":
                         self.open_count = self.open_count + 1
-                    if i == ")":
+                    if i == ")" or i == "]":
                         self.close_count = self.close_count + 1
                 if self.open_count != self.close_count:
                     self.command_incomplete = True
