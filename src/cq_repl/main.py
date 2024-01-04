@@ -103,7 +103,7 @@ def show_object(model):
         objects = process_workplane(model)
     elif type(model).__name__ == "Assembly":
         objects = process_assembly(model)
-    elif type(model).__name__ == "CadObject":
+    elif type(model).__name__ == "Body":
         model.cq().label = model.label
         objects = process_workplane(model.cq())
 
