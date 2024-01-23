@@ -194,6 +194,7 @@ class replTimerCallback:
 
     def __init__(self):
         self.buffer = ""
+        self.def_incomplete = False
         self.command_incomplete = False
         self.open_count = 0
         self.close_count = 0
@@ -239,7 +240,7 @@ class replTimerCallback:
 
             # If the line starts with class or def, expect some indented lines
             if line.strip().startswith("def") or line.strip().startswith("class"):
-                self.command_incomplete = True
+                self.def_incomplete = True
                 self.buffer += line
                 return
 
@@ -249,36 +250,35 @@ class replTimerCallback:
                 line = self.buffer
 
                 # Reset back to the complete line condition
-                self.command_incomplete = False
+                self.def_incomplete = False
                 self.buffer = ""
 
             # Check for follow-on indented lines
-            if line.startswith(" ") and self.command_incomplete:
+            if line.startswith(" ") and self.def_incomplete:
                 self.buffer += line
                 return
 
-            if "(" in line or ")" in line or "[" in line or "]" in line:
-                # Check if the line is incomplete (open parens do not match close perens)
-                for i in line:
-                    if i == "(" or i == "[":
-                        self.open_count = self.open_count + 1
-                    if i == ")" or i == "]":
-                        self.close_count = self.close_count + 1
-                if self.open_count != self.close_count:
-                    self.command_incomplete = True
-                    self.buffer += line
-                    return
+            # Keep track of the opens and closes in these continuation lines
+            self.open_count += line.count("(")
+            self.close_count += line.count(")")
+            self.open_count += line.count("[")
+            self.close_count += line.count("]")
 
-                # If we had an incomplete command before but it is complete now, finish it out
-                if self.command_incomplete and self.open_count == self.close_count:
-                    self.buffer += line
-                    line = self.buffer
+            if self.open_count != self.close_count:
+                self.command_incomplete = True
+                self.buffer += line
+                return
 
-                    # Reset back to the complete line condition
-                    self.command_incomplete = False
-                    self.buffer = ""
-                    self.open_count = 0
-                    self.close_count = 0
+            # If we had an incomplete command before but it is complete now, finish it out
+            if self.command_incomplete and (self.open_count > 0 and self.close_count > 0) and self.open_count == self.close_count:
+                self.buffer += line
+                line = self.buffer
+
+                # Reset back to the complete line condition
+                self.command_incomplete = False
+                self.buffer = ""
+                self.open_count = 0
+                self.close_count = 0
 
             # Figure out if the line is code, or the user hitting Ctrl-D
             if line:
