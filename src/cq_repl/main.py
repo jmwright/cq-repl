@@ -479,7 +479,7 @@ def init_vtkwindow(render_window, renderer, repl_cb):
     renderer.GradientBackgroundOn()
 
     # Camera setup
-    # camera = renderer.GetActiveCamera()
+    repl_camera.SetClippingRange(0, 1000)
     repl_camera.Roll(-35)
     repl_camera.Elevation(-45)
     repl_camera.SetViewUp(0, 0, 1)
