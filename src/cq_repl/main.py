@@ -238,6 +238,17 @@ class replTimerCallback:
 
                 return
 
+            # If the line is an import statement, we need to remove it from the sys.modules collection.
+            # If this is not done, iterative development is slower because changes in imported modules
+            # will not be picked up.
+            if "import" in line:
+                # Parse the module out of the import line
+                module_key = line.split(" ")[1]
+
+                # Parse the line to remove the modules from the collection
+                if module_key in sys.modules.keys():
+                    sys.modules.pop(module_key)
+
             # If the line starts with class or def, expect some indented lines
             if line.strip().startswith("def") or line.strip().startswith("class"):
                 self.def_incomplete = True
